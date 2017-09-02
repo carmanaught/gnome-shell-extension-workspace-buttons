@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schemalist gettext-domain="workspace-buttons">
+  <schema path="/org/gnome/shell/extensions/workspacebuttons/" id="org.gnome.shell.extensions.workspacebuttons">
+    <key type="s" name="buttons-position">
+     	<default>'left'</default>
+    	<summary>Position on panel.</summary>
+      	<description>Sets the position of the buttons on the panel. Possible values are: Left, Center, and Right.</description>
+    </key>
+    <key type="b" name="buttons-position-change">
+     	<default>false</default>
+    	<summary>Enable index position change.</summary>
+     	<description>Allows the change of the numerical index position within the Left/Right/Center positions.</description>
+    </key>
+    <key type="i" name="buttons-position-index">
+     	<default>1</default>
+    	<summary>Index position</summary>
+     	<description>Specifies the index position with positive values changing 'first from left' and negative values changing 'first from right' (best used with Right alignment). Possible values range from -999 to 999.</description>
+    </key>
+    <key type="b" name="wrap-around-mode">
+     	<default>false</default>
+    	<summary>Enable wrap-around mode.</summary>
+     	<description>Wraps around from the last workspace to the first workspace when scrolling over the workspace bar.</description>
+    </key>
+    <key type="b" name="empty-workspace-style">
+     	<default>true</default>
+    	<summary>Enable empty workspace styling.</summary>
+     	<description>Enables the use of the empty workspace styling which is intended to indicate that no windows are active on a given workspace.</description>
+    </key>
+    <key type="b" name="urgent-workspace-style">
+     	<default>true</default>
+    	<summary>Enable urgent workspace styling.</summary>
+     	<description>Enables the use of the urgent workspace styling which is intended to indicate that a window demands attention or has an urgent window hint.</description>
+    </key>
+    <key type="b" name="workspace-label-number">
+     	<default>true</default>
+    	<summary>Show the workspace number.</summary>
+     	<description>.</description>
+    </key>
+    <key type="b" name="workspace-label-name">
+     	<default>true</default>
+    	<summary>Show the workspace name.</summary>
+     	<description>.</description>
+    </key>
+    <key type="s" name="workspace-label-separator">
+     	<default>': '</default>
+    	<summary>Workspace label separator.</summary>
+      	<description>Specifies the separator to be used between the workspace number and the workspace title, if being displayed.</description>
+    </key>
+	<key type="b" name="workspace-label-indicator">
+     	<default>false</default>
+    	<summary>Enable the workspace indicators.</summary>
+     	<description>.</description>
+    </key>
+    <key type="as" name="workspace-label-indicators">
+     	<default>[]</default>
+    	<summary>Workspace label indicators.</summary>
+      	<description>Specifies an array of label indicators to use instead of labels.</description>
+    </key>
+	<key type="s" name="urgent-color">
+     	<default>'#E50909'</default>
+    	<summary>Urgent workspace color.</summary>
+      	<description>Specifies the color to be used for workspaces with windows that are marked urgent/demands attention.</description>
+    </key>
+	<key type="s" name="hover-color">
+     	<default>'#FFFFFF'</default>
+    	<summary>Hover color.</summary>
+      	<description>Specifies the color to be used when the mouse is hovered over a workspace button.</description>
+    </key>
+	<key type="s" name="active-color">
+     	<default>'#FFFFFF'</default>
+    	<summary>Active workspace color.</summary>
+      	<description>Specifies the color to be used for the workspace that is currently active.</description>
+    </key>
+	<key type="s" name="inactive-color">
+     	<default>'#666666'</default>
+    	<summary>Inactive workspace color.</summary>
+      	<description>Specifies the color to be used for workspaces that have windows active on them, but are not the active workspace (or if empty workspace styling is disabled).</description>
+    </key>
+	<key type="s" name="empty-color">
+     	<default>'#222222'</default>
+    	<summary>Empty workspace color.</summary>
+      	<description>Specifies the color to be used for workspaces without any windows active on them.</description>
+    </key>
+  </schema>
+</schemalist>

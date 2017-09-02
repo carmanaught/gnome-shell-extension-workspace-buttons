@@ -1,0 +1,13 @@
+{
+    "name": "Workspace Buttons",
+    "description": "Display a group of workspace indicator buttons on the panel providing the ability to switch between workspaces and access a list of windows on a given workspace along with providing a visual indicator of workspace usage/activity.",
+    "uuid": "workspace-buttons@carmanaught.github.com",
+    "extension-id": "workspace-buttons-panel", 
+    "gettext-domain": "workspace-buttons", 
+    "settings-schema": "org.gnome.shell.extensions.workspacebuttons",
+    "shell-version": [
+      "3.24"
+    ], 
+    "url": "http://github.com/carmanaught/gnome-shell-extension-workspace-buttons/", 
+    "version": 1
+}
