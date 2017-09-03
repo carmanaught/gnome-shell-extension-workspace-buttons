@@ -27,6 +27,8 @@ const KEYS = {
     buttonsPosChange:   "buttons-position-change",
     buttonsPosIndex:    "buttons-position-index",
     wrapAroundMode:     "wrap-around-mode",
+    clickToActivate:    "click-to-activate",
+    buttonToActivate:   "button-to-activate",
     emptyWorkStyle:     "empty-workspace-style",
     urgentWorkStyle:    "urgent-workspace-style",
     numLabel:           "workspace-label-number",
@@ -46,6 +48,10 @@ const POSITIONS = [
     "center",
     "right"
 ];
+const BUTTONS = [
+    "Primary",
+    "Secondary"
+]
 
 const WORKSPACE_SCHEMA = "org.gnome.desktop.wm.preferences";
 const WORKSPACE_KEY = "workspace-names";
@@ -124,10 +130,12 @@ const WorkspaceButtonsSettings = new GObject.Class({
             halign: Gtk.Align.END
         });
         for (let i = 0; i < POSITIONS.length; i++) {
-            this.cmbPosition.append_text(this._capCase(POSITIONS[i]));
+            this.cmbPosition.append_text(POSITIONS[i].charAt(0).toUpperCase() + POSITIONS[i].slice(1));
         }
         this.cmbPosition.set_active(POSITIONS.indexOf(this._settings.get_string(KEYS.buttonsPos)));
-        this.cmbPosition.connect ("changed", Lang.bind (this, this._onPositionChanged));
+        this.cmbPosition.connect ("changed", () => {
+            this._settings.set_string(KEYS.buttonsPos, POSITIONS[this.cmbPosition.active]);
+        });
         this.attach(this.cmbPosition, 2, 1, 1, 1);
         
         // Position Index enable label
@@ -143,18 +151,18 @@ const WorkspaceButtonsSettings = new GObject.Class({
             active: this._settings.get_boolean(KEYS.buttonsPosChange),
             halign: Gtk.Align.END
         });
-        swPositionIndexEnable.connect ("notify::active", Lang.bind (this, function() {
-             this._setIndexEnableChange(swPositionIndexEnable);
-             lblPositionIndex.set_sensitive(swPositionIndexEnable.active === true ? true : false);
-             this.spnPosition.set_sensitive(swPositionIndexEnable.active === true ? true : false);
-        }));
+        swPositionIndexEnable.connect ("notify::active", () => {
+             this._settings.set_boolean(KEYS.buttonsPosChange, swPositionIndexEnable.active);
+             lblPositionIndex.set_sensitive(swPositionIndexEnable.active);
+             this.spnPosition.set_sensitive(swPositionIndexEnable.active);
+        });
         this.attach(swPositionIndexEnable, 2, 2, 1, 1);
                 
         // Position Index label
         let lblPositionIndex = new Gtk.Label({
             label: _("Specify position index"),
             margin_left: 15,
-            sensitive: this._settings.get_boolean(KEYS.buttonsPosChange) === true ? true : false,
+            sensitive: this._settings.get_boolean(KEYS.buttonsPosChange),
             halign: Gtk.Align.START
         });
         this.attach(lblPositionIndex, 0, 3, 2, 1);
@@ -177,7 +185,9 @@ const WorkspaceButtonsSettings = new GObject.Class({
         this.spnPosition.set_value (this._settings.get_int(KEYS.buttonsPosIndex));
         this.spnPosition.set_digits (0);
         this.spnPosition.set_wrap (false);
-        this.spnPosition.connect ("value-changed", Lang.bind (this, this._setPositionIndexChange));
+        this.spnPosition.connect ("value-changed", () => {
+            this._settings.set_int(KEYS.buttonsPosIndex, this.spnPosition.value);
+        });
         this.attach(this.spnPosition, 2, 3, 1, 1);
         
         // General Settings label
@@ -202,34 +212,59 @@ const WorkspaceButtonsSettings = new GObject.Class({
             active: this._settings.get_boolean(KEYS.wrapAroundMode),
             halign: Gtk.Align.END
         });
-        swWrapAround.connect ("notify::active", Lang.bind (this, this._setWrapAroundMode));
+        swWrapAround.connect ("notify::active", () => {
+            this._settings.set_boolean(KEYS.wrapAroundMode, swWrapAround.active);
+        });
         this.attach(swWrapAround, 2, 5, 1, 1);
-    },
-    
-    _capCase: function(str) {
-        return str.charAt(0).toUpperCase() + str.slice(1);
-    },
-    
-    _lowCase: function(str) {
-        return str.charAt(0).toLowerCase() + str.slice(1);
-    },
-    
-    _onPositionChanged: function() {
-        let activeItem = this.cmbPosition.get_active();
-        this._settings.set_string(KEYS.buttonsPos, POSITIONS[activeItem]);
-    },
-    
-    _setIndexEnableChange: function(object) {
-        this._settings.set_boolean(KEYS.buttonsPosChange, object.active);
-    },
+        
+        // Show Click to Activate label
+        let lblClickActivate = new Gtk.Label({
+            label: _("Click to activate workspaces") + "\n<span font_size='small'>" + _("One button will activate, the other will open the menu") + "</span>",
+            margin_left: 15,
+            use_markup: true,
+            halign: Gtk.Align.START
+        });
+        this.attach(lblClickActivate, 0, 6, 2, 1);
 
-    _setPositionIndexChange: function(object) {
-        this._settings.set_int(KEYS.buttonsPosIndex, object.value);
+        // Show Click to Activate switch
+        let swClickActivate = new Gtk.Switch({
+            active: this._settings.get_boolean(KEYS.clickToActivate),
+            halign: Gtk.Align.END
+        });
+        swClickActivate.connect ("notify::active", () => {
+            this._settings.set_boolean(KEYS.clickToActivate, swClickActivate.active);
+            lblButtonActivate.set_sensitive(swClickActivate.active);
+            this.cmbButtonActivate.set_sensitive(swClickActivate.active);
+        });
+        this.attach(swClickActivate, 2, 6, 1, 1);
+        
+        // Show Button to Activate label
+        let lblButtonActivate = new Gtk.Label({
+            label: _("Button to activate workspaces"),
+            sensitive: this._settings.get_boolean(KEYS.clickToActivate),
+            margin_left: 15,
+            halign: Gtk.Align.START
+        });
+        this.attach(lblButtonActivate, 0, 7, 2, 1);
+
+        // Show Button to Activate switch
+        this.cmbButtonActivate = new Gtk.ComboBoxText({
+            sensitive: this._settings.get_boolean(KEYS.clickToActivate),
+            halign: Gtk.Align.END
+        });
+        
+        for (let i = 0; i < BUTTONS.length; i++) {
+            this.cmbPosition.append_text(BUTTONS[i]);
+        }
+        
+        this.cmbButtonActivate.append_text("Primary");
+        this.cmbButtonActivate.append_text("Secondary");
+        this.cmbButtonActivate.set_active(BUTTONS.indexOf(this._settings.get_string(KEYS.buttonToActivate)));
+        this.cmbButtonActivate.connect ("changed", () => {
+            this._settings.set_string(KEYS.buttonToActivate, BUTTONS[this.cmbButtonActivate.active]);
+        });
+        this.attach(this.cmbButtonActivate, 2, 7, 1, 1);
     },
-    
-    _setWrapAroundMode: function(object) {
-        this._settings.set_boolean(KEYS.wrapAroundMode, object.active);
-    }
 });
 
 const WorkspaceButtonsWorkspaceFormat = new GObject.Class({
@@ -270,7 +305,9 @@ const WorkspaceButtonsWorkspaceFormat = new GObject.Class({
             sensitive: true,
             halign: Gtk.Align.END
         });
-        swEmptyWorkspace.connect ("notify::active", Lang.bind (this, this._setEmptyWorkspaceStyle));
+        swEmptyWorkspace.connect ("notify::active", () => {
+            this._settings.set_boolean(KEYS.emptyWorkStyle, swEmptyWorkspace.active);
+        });
         this.attach(swEmptyWorkspace, 2, 1, 1, 1);
         
         // Show Urgent Workspace label
@@ -286,7 +323,9 @@ const WorkspaceButtonsWorkspaceFormat = new GObject.Class({
             active: this._settings.get_boolean(KEYS.urgentWorkStyle),
             halign: Gtk.Align.END
         });
-        swUrgentWorkspace.connect ("notify::active", Lang.bind (this, this._setUrgentWorkspaceStyle));
+        swUrgentWorkspace.connect ("notify::active", () => {
+            this._settings.set_boolean(KEYS.urgentWorkStyle, swUrgentWorkspace.active);
+        });
         this.attach(swUrgentWorkspace, 2, 2, 1, 1);
         
         // Show workspace numbers label
@@ -304,8 +343,8 @@ const WorkspaceButtonsWorkspaceFormat = new GObject.Class({
             active: this._settings.get_boolean(KEYS.numLabel),
             halign: Gtk.Align.END
         });
-        swWkspNumber.connect ("notify::active", Lang.bind (this, function () {
-            this._setWkspNumber(swWkspNumber);
+        swWkspNumber.connect ("notify::active", () => {
+            this._settings.set_boolean(KEYS.numLabel, swWkspNumber.active);
             
             // Disable workspace label separator if both workspace numbers and names are not
             //  enabled
@@ -322,7 +361,7 @@ const WorkspaceButtonsWorkspaceFormat = new GObject.Class({
                 swWkspName.set_sensitive(swWkspNumber.active === true || swActInd.active === true ? true : false);
             }
             
-        }));
+        });
         this.attach(swWkspNumber, 2, 3, 1, 1);
         
         // Show workspace names label
@@ -340,7 +379,7 @@ const WorkspaceButtonsWorkspaceFormat = new GObject.Class({
             active: this._settings.get_boolean(KEYS.nameLabel),
             halign: Gtk.Align.END
         });
-        swWkspName.connect ("notify::active", Lang.bind (this, function () {
+        swWkspName.connect ("notify::active", () => {
             this._setWkspName(swWkspName);
             
             // Disable workspace label separator if both workspace numbers and names are not
@@ -352,12 +391,12 @@ const WorkspaceButtonsWorkspaceFormat = new GObject.Class({
             //  enabled as we have to have some sort of indicator
             lblWkspNumber.set_sensitive(swWkspName.active === true || swActInd.active === true ? true : false);
             swWkspNumber.set_sensitive(swWkspName.active === true || swActInd.active === true ? true : false);
-        }));
+        });
         this.attach(swWkspName, 2, 4, 1, 1);
         
         // Workspace label separator label
         let lblSeparator = new Gtk.Label({
-            label: _("Workspace label separator") + "\n<span font_size='small'>" + _("Add spaces here as they will not be automatically added otherwise")+ "</span>",
+            label: _("Workspace label separator") + "\n<span font_size='small'>" + _("Add spaces here as they will not be automatically added otherwise") + "</span>",
             margin_left: 15,
             use_markup: true,
             sensitive: swWkspNumber.active === true && swWkspName.active === true ? true : false,
@@ -372,8 +411,8 @@ const WorkspaceButtonsWorkspaceFormat = new GObject.Class({
             halign: Gtk.Align.END
         });
         this.txtSeparator.set_text(this._settings.get_string(KEYS.labelSeparator));
-        this.txtSeparator.connect ("changed", Lang.bind (this, this._onSeparatorChanged));
-        this.txtSeparator.connect ("activate", Lang.bind (this, this._onSeparatorChanged));
+        this.txtSeparator.connect ("changed", () => { this._onSeparatorChanged() });
+        this.txtSeparator.connect ("activate", () => { this._onSeparatorChanged() });
         this.attach(this.txtSeparator, 2, 5, 1, 1);
         
         // Show activity indicators label
@@ -390,8 +429,8 @@ const WorkspaceButtonsWorkspaceFormat = new GObject.Class({
             active: this._settings.get_boolean(KEYS.indLabel),
             halign: Gtk.Align.END
         });
-        swActInd.connect ("notify::active", Lang.bind (this, function() {
-            this._setActInd(swActInd);
+        swActInd.connect ("notify::active", () => {
+            this._settings.set_boolean(KEYS.indLabel, swActInd.active);
             
             let actIndEnable = this._settings.get_boolean(KEYS.indLabel);
             let numIndEnable = this._settings.get_boolean(KEYS.numLabel);
@@ -435,7 +474,7 @@ const WorkspaceButtonsWorkspaceFormat = new GObject.Class({
             this.txtInactiveInd.set_sensitive(actIndEnable);
             lblActiveInd.set_sensitive(actIndEnable);
             this.txtActiveInd.set_sensitive(actIndEnable);
-        }));
+        });
         this.attach(swActInd, 2, 6, 1, 1);
         
         // Activity indicators label
@@ -480,8 +519,8 @@ const WorkspaceButtonsWorkspaceFormat = new GObject.Class({
             halign: Gtk.Align.CENTER
         });
         this.txtEmptyInd.set_text(indList[0] !== undefined ? indList[0] : "");
-        this.txtEmptyInd.connect ("changed", Lang.bind (this, this._onIndicatorChanged));
-        this.txtEmptyInd.connect ("activate", Lang.bind (this, this._onIndicatorChanged));
+        this.txtEmptyInd.connect ("changed", () => { this._onIndicatorChanged() });
+        this.txtEmptyInd.connect ("activate", () => { this._onIndicatorChanged() });
         this.attach(this.txtEmptyInd, 0, 9, 1, 1);
         
         // Inactive workspace activity indicator text entry
@@ -491,8 +530,8 @@ const WorkspaceButtonsWorkspaceFormat = new GObject.Class({
             halign: Gtk.Align.CENTER
         });
         this.txtInactiveInd.set_text(indList[1] !== undefined ? indList[1] : "");
-        this.txtInactiveInd.connect ("changed", Lang.bind (this, this._onIndicatorChanged));
-        this.txtInactiveInd.connect ("activate", Lang.bind (this, this._onIndicatorChanged));
+        this.txtInactiveInd.connect ("changed", () => { this._onIndicatorChanged() });
+        this.txtInactiveInd.connect ("activate", () => { this._onIndicatorChanged() });
         this.attach(this.txtInactiveInd, 1, 9, 1, 1);
         
         // Active workspace activity indicator text entry
@@ -502,44 +541,20 @@ const WorkspaceButtonsWorkspaceFormat = new GObject.Class({
             halign: Gtk.Align.CENTER
         });
         this.txtActiveInd.set_text(indList[2] !== undefined ? indList[2] : "");
-        this.txtActiveInd.connect ("changed", Lang.bind (this, this._onIndicatorChanged));
-        this.txtActiveInd.connect ("activate", Lang.bind (this, this._onIndicatorChanged));
+        this.txtActiveInd.connect ("changed", () => { this._onIndicatorChanged() });
+        this.txtActiveInd.connect ("activate", () => { this._onIndicatorChanged() });
         this.attach(this.txtActiveInd, 2, 9, 1, 1);
-    },
-    
-    _capCase: function(str) {
-        return str.charAt(0).toUpperCase() + str.slice(1);
-    },
-    
-    _lowCase: function(str) {
-        return str.charAt(0).toLowerCase() + str.slice(1);
-    },
-    
-    _setEmptyWorkspaceStyle: function(object) {
-        this._settings.set_boolean(KEYS.emptyWorkStyle, object.active);
-    },
-    
-    _setUrgentWorkspaceStyle: function(object) {
-        this._settings.set_boolean(KEYS.urgentWorkStyle, object.active);
-    },
-    
-    _setWkspNumber: function(object) {
-        this._settings.set_boolean(KEYS.numLabel, object.active);
     },
     
     _setWkspName: function(object) {
         this._settings.set_boolean(KEYS.nameLabel, object.active);
     },
     
-    _setActInd: function(object) {
-        this._settings.set_boolean(KEYS.indLabel, object.active);
-    },
-    
     _onSeparatorChanged: function() {
         this._settings.set_string(KEYS.labelSeparator, this.txtSeparator.get_text());
     },
     
-    _onIndicatorChanged: function(object) {
+    _onIndicatorChanged: function() {
         let arrIndicators = [];
         arrIndicators[0] = this.txtEmptyInd.get_text();
         arrIndicators[1] = this.txtInactiveInd.get_text();
@@ -670,8 +685,8 @@ const WorkspaceButtonsWorkspaceColors = new GObject.Class({
 });
 
 const WorkspaceNameModel = new GObject.Class({
-    Name: "WorkspaceButtons.WorkspaceButtonsNameModel",
-    GTypeName: "WorkspaceButtonsNameModel",
+    Name: "WorkspaceButtons.WorkspaceNameModel",
+    GTypeName: "WorkspaceNameModel",
     Extends: Gtk.ListStore,
 
     Columns: {
@@ -683,15 +698,15 @@ const WorkspaceNameModel = new GObject.Class({
         this.set_column_types([GObject.TYPE_STRING]);
 
         this._wnsettings = new Gio.Settings({ schema_id: WORKSPACE_SCHEMA });
-        //this._wnsettings.connect("changed::workspace-names", Lang.bind(this, this._reloadFromSettings));
+        //this._wnsettings.connect("changed::workspace-names", () => { this._reloadFromSettings(); });
 
         this._reloadFromSettings();
 
         // overriding class closure doesn't work, because GtkTreeModel
         // plays tricks with marshallers and class closures
-        this.connect("row-changed", Lang.bind(this, this._onRowChanged));
-        this.connect("row-inserted", Lang.bind(this, this._onRowInserted));
-        this.connect("row-deleted", Lang.bind(this, this._onRowDeleted));
+        this.connect("row-changed", () => { this._onRowChanged(); });
+        this.connect("row-inserted", () => { this._onRowInserted(); });
+        this.connect("row-deleted", () => { this._onRowDeleted(); });
     },
 
     _reloadFromSettings: function() {
@@ -781,8 +796,8 @@ const WorkspaceNameModel = new GObject.Class({
 });
 
 const WorkspaceSettingsWidget = new GObject.Class({
-    Name: "WorkspaceButtons.WorkspaceButtonsSettingsWidget",
-    GTypeName: "WorkspaceButtonsSettingsWidget",
+    Name: "WorkspaceButtons.WorkspaceSettingsWidget",
+    GTypeName: "WorkspaceSettingsWidget",
     Extends: Gtk.Grid,
 
     _init: function(params) {
@@ -808,7 +823,7 @@ const WorkspaceSettingsWidget = new GObject.Class({
 
         let column = new Gtk.TreeViewColumn({ title: _("Name") });
         let renderer = new Gtk.CellRendererText({ editable: true });
-        renderer.connect("edited", Lang.bind(this, this._cellEdited));
+        renderer.connect("edited", () => { this._cellEdited(); });
         column.pack_start(renderer, true);
         column.add_attribute(renderer, "text", this._store.Columns.LABEL);
         this._treeView.append_column(column);
@@ -819,11 +834,11 @@ const WorkspaceSettingsWidget = new GObject.Class({
         toolbar.get_style_context().add_class(Gtk.STYLE_CLASS_INLINE_TOOLBAR);
 
         let newButton = new Gtk.ToolButton({ icon_name: "list-add-symbolic" });
-        newButton.connect("clicked", Lang.bind(this, this._newClicked));
+        newButton.connect("clicked", () => { this._newClicked(); });
         toolbar.add(newButton);
 
         let delButton = new Gtk.ToolButton({ icon_name: "list-remove-symbolic" });
-        delButton.connect("clicked", Lang.bind(this, this._delClicked));
+        delButton.connect("clicked", () => { this._delClicked(); });
         toolbar.add(delButton);
 
         let selection = this._treeView.get_selection();

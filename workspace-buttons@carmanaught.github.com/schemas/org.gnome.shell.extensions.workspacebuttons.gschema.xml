@@ -21,6 +21,16 @@
     	<summary>Enable wrap-around mode.</summary>
      	<description>Wraps around from the last workspace to the first workspace when scrolling over the workspace bar.</description>
     </key>
+	<key type="b" name="click-to-activate">
+     	<default>false</default>
+    	<summary>Enable click to activate workspace.</summary>
+     	<description>Enables the ability to click on a button to activate a workspace, rather than opening the popup menu.</description>
+    </key>
+	<key type="s" name="button-to-activate">
+     	<default>'Primary'</default>
+    	<summary>Button to use for click to activate.</summary>
+      	<description>Specifies which button will be used to activate a workspace when the click to activate functionality is enabled.</description>
+    </key>
     <key type="b" name="empty-workspace-style">
      	<default>true</default>
     	<summary>Enable empty workspace styling.</summary>

@@ -32,6 +32,8 @@ const KEYS = {
     buttonsPosChange:   "buttons-position-change",
     buttonsPosIndex:    "buttons-position-index",
     wrapAroundMode:     "wrap-around-mode",
+    clickToActivate:    "click-to-activate",
+    buttonToActivate:   "button-to-activate",
     emptyWorkStyle:     "empty-workspace-style",
     urgentWorkStyle:    "urgent-workspace-style",
     numLabel:           "workspace-label-number",
@@ -122,9 +124,12 @@ const WorkspaceButton = Lang.Class({
         let doToggle = true;
         if (this.menu && (event.type() === Clutter.EventType.TOUCH_END ||  event.type() === Clutter.EventType.BUTTON_RELEASE || event.type() === Clutter.EventType.SCROLL)) {
             if (event.type() === Clutter.EventType.BUTTON_RELEASE) {
-                if (event.get_button() === 1 && !this.menu.isOpen) {
-                    this._setWorkspace(this._wsIndex);
-                    doToggle = false;
+                if (this.clickActivate === true) {
+                    let buttonCheck = (this.buttonActivate === "Primary") ? 1 : (this.buttonActivate === "Secondary") ? 3 : 1;
+                    if (event.get_button() === buttonCheck && !this.menu.isOpen) {
+                        this._setWorkspace(this._wsIndex);
+                        doToggle = false;
+                    }
                 }
             }
             
@@ -138,13 +143,18 @@ const WorkspaceButton = Lang.Class({
                 this.menu.toggle();
             }
         }
-            
+        
+        //this.clickActivate
+        //this.buttonActivate
+        
         return Clutter.EVENT_PROPAGATE;
     },
     
     _initSettings() {
         // Event/action (wraparound)
         this.wraparoundMode = _settings.get_boolean(KEYS.wrapAroundMode);
+        this.clickActivate = _settings.get_boolean(KEYS.clickToActivate);
+        this.buttonActivate = _settings.get_string(KEYS.buttonToActivate);
         // Workspace style
         this.emptyWorkspaceStyle = _settings.get_boolean(KEYS.emptyWorkStyle);
         this.urgentWorkspaceStyle = _settings.get_boolean(KEYS.urgentWorkStyle);
@@ -167,9 +177,15 @@ const WorkspaceButton = Lang.Class({
         this._windowTracker = Shell.WindowTracker.get_default();
         let display = global.screen.get_display();
         
-        // This is purely a settings update
+        // These are purely settings updates
         this._settingsSignals.push(_settings.connect("changed::" + KEYS.wrapAroundMode, () => {
             this.wraparoundMode = _settings.get_boolean(KEYS.wrapAroundMode);
+        }));
+        this._settingsSignals.push(_settings.connect("changed::" + KEYS.clickToActivate, () => {
+            this.clickActivate = _settings.get_boolean(KEYS.clickToActivate);
+        }));
+        this._settingsSignals.push(_settings.connect("changed::" + KEYS.buttonToActivate, () => {
+            this.buttonActivate = _settings.get_string(KEYS.buttonToActivate);
         }));
         
         // Change the buttons style (applied to the label)
