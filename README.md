@@ -25,7 +25,7 @@ This is how the menu looks when opened. The left is the appearance with the pane
 
 These are the General Settings on the Settings page.
 
-![Workspace Buttons - General Settings](http://i.imgur.com/PBPqpOv.png)
+![Workspace Buttons - General Settings](https://i.imgur.com/AGpEZWu.png)
 
 Thse is the Workspace Label Format settings page which is used to change the settings to change how the workspace labels appear. The format settings are somewhat more extensive and allow a greater degree of customization.
 
