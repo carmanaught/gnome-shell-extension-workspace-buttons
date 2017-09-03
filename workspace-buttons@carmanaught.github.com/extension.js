@@ -397,7 +397,7 @@ const WorkspaceButton = Lang.Class({
             });
             
             this.workspaceLabel._urgent = false;
-            if (urgentWindows.length > 0 && this.urgentWorkspaceStyle === true) {
+            if (this._wsIndex !== this.currentWorkSpace && urgentWindows.length > 0 && this.urgentWorkspaceStyle === true) {
                 this.workspaceLabel._urgent = true;
                 this.workspaceLabel.style = styleUrgent;
             } else if (this._wsIndex === this.currentWorkSpace) {
