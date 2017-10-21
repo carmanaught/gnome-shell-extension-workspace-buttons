@@ -236,6 +236,7 @@ const WorkspaceButton = Lang.Class({
         // We'll need to update the workspace style when the workspace is changed
         this._screenSignals.push(global.screen.connect_after("workspace-switched", (screenObj, wsFrom, wsTo, wsDirection, wsPointer) => {
             if (this._wsIndex === wsFrom || this._wsIndex === wsTo) {
+                this._updateMenu();
                 this._updateStyle();
             }
         }));
