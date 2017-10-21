@@ -321,6 +321,9 @@ const WorkspaceButton = Lang.Class({
             
             let workspaceName = Meta.prefs_get_workspace_name(this._wsIndex);
             let metaWorkspace = global.screen.get_workspace_by_index(this._wsIndex);
+            // Stop executing inside the timeout if the workspace is undefined since
+            // it means the workspace is probably gone.
+            if (metaWorkspace === null) { return false; }
             let windowList = metaWorkspace.list_windows();
             let stickyWindows = windowList.filter(function(w) {
                 return !w.is_skip_taskbar() && w.is_on_all_workspaces();
@@ -376,6 +379,8 @@ const WorkspaceButton = Lang.Class({
                 emptyItem.actor.can_focus = false;
                 this.menu.addMenuItem(emptyItem);
             }
+            
+            return false;
         });
     },
     
@@ -386,6 +391,9 @@ const WorkspaceButton = Lang.Class({
         Mainloop.timeout_add(1, () => {
             let workspaceName = Meta.prefs_get_workspace_name(this._wsIndex);
             let metaWorkspace = global.screen.get_workspace_by_index(this._wsIndex);
+            // Stop executing inside the timeout if the workspace is undefined since
+            // it means the workspace is probably gone.
+            if (metaWorkspace == undefined) { return false; }
             let windowList = metaWorkspace.list_windows();
             let stickyWindows = windowList.filter(function (w) {
                 return !w.is_skip_taskbar() && w.is_on_all_workspaces();
@@ -409,6 +417,8 @@ const WorkspaceButton = Lang.Class({
                 let emptyStyle = (this.emptyWorkspaceStyle === true) ? styleEmpty : styleInactive;
                 this.workspaceLabel.style = emptyStyle;
             }
+            
+            return false;
         });
     },
     
@@ -455,6 +465,9 @@ const WorkspaceButton = Lang.Class({
         Mainloop.timeout_add(1, () => {
             let workspaceName = Meta.prefs_get_workspace_name(this._wsIndex);
             let metaWorkspace = global.screen.get_workspace_by_index(this._wsIndex);
+            // Stop executing inside the timeout if the workspace is undefined since
+            // it means the workspace is probably gone.
+            if (metaWorkspace === null) { return false; }
             let windowList = metaWorkspace.list_windows();
             let stickyWindows = windowList.filter(function (w) {
                 return !w.is_skip_taskbar() && w.is_on_all_workspaces();
@@ -477,7 +490,9 @@ const WorkspaceButton = Lang.Class({
                 str = (actIndicator === true) ? str + this.activityIndicators[1] : str;
             }
             
-            this.workspaceLabel.text = str
+            this.workspaceLabel.text = str;
+            
+            return false;
         });
         
         
@@ -528,7 +543,7 @@ const WorkspaceButton = Lang.Class({
     
     _activateWindow(metaWorkspace, metaWindow) {
         if(!metaWindow.is_on_all_workspaces()) { metaWorkspace.activate(global.get_current_time()); }
-        metaWindow.unminimize(global.get_current_time());
+        metaWindow.unminimize();
         metaWindow.unshade(global.get_current_time());
         metaWindow.activate(global.get_current_time());
     },
@@ -610,7 +625,10 @@ function destroyWorkspaceButtons () {
 
 function setPosition() {
     destroyWorkspaceButtons();
-    buildWorkspaceButtons();
+    Mainloop.timeout_add(100, () => {
+        buildWorkspaceButtons();
+        return false;
+    });
 }
 
 function init () {
@@ -621,11 +639,23 @@ function init () {
 }
 
 function enable() {
+    let workspacesChanged = false;
     workspaceSignals = [];
     // It's easiest if we rebuild the buttons when workspaces are removed or added
     workspaceSignals.push(global.screen.connect_after("notify::n-workspaces", (metaScreen, paramSpec) => {
-        destroyWorkspaceButtons();
-        buildWorkspaceButtons();
+        // Only change the workspaces once, after a delay to allow for workspaces to be removed and
+        // to prevent errors with sudden repeated workspace count changes.
+        if (workspacesChanged === false) {
+            Mainloop.timeout_add(100, () => {
+                destroyWorkspaceButtons();
+                buildWorkspaceButtons();
+                // Reset this in the timeout so that future workspace changes will work.
+                workspacesChanged = false;
+                return false;
+            });
+            // Use this to avoid adding new timeouts to the Mainloop.
+            workspacesChanged = true;
+        }
     }));
     
     // Set signals to get changes when made to preferences
