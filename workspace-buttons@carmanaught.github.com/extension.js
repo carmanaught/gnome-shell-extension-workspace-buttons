@@ -229,15 +229,19 @@ const WorkspaceButton = Lang.Class({
         
         // If a window is closed, we want to change the style if it's empty and an empty style
         // has been configured
+        // The workspace label is also updated to change to the empty workspace indicator
         this._screenSignals.push(global.screen.connect("window-left-monitor", () => {
             this._updateMenu();
             this._updateStyle();
+            this._updateLabel();
         }));
         // We'll need to update the workspace style when the workspace is changed
+        // We also update the label to switch to/from the active workspace indicator
         this._screenSignals.push(global.screen.connect_after("workspace-switched", (screenObj, wsFrom, wsTo, wsDirection, wsPointer) => {
             if (this._wsIndex === wsFrom || this._wsIndex === wsTo) {
                 this._updateMenu();
                 this._updateStyle();
+                this._updateLabel();
             }
         }));
         
