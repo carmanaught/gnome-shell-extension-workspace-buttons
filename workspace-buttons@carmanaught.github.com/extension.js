@@ -82,7 +82,7 @@ const WorkspaceButton = Lang.Class({
         } else {
             this._wsIndex = -1;
         }
-        
+        this.metaWorkspace = global.screen.get_workspace_by_index(this._wsIndex);                
         // Change the button styling to reduce padding (normally "panel-button" style)
         this.actor.add_style_class_name("reduced-padding");
         
@@ -110,7 +110,7 @@ const WorkspaceButton = Lang.Class({
         
         // Connect to various signals
         this._connectSignals();
-        // Add a delay so that the metaWorkspace.list_windows() of the _updateMenu function
+        // Add a delay so that the this.metaWorkspace.list_windows() of the _updateMenu function
         // will work properly, otherwise we'll have an empty window list.
         this._updateMenu();
         
@@ -172,7 +172,8 @@ const WorkspaceButton = Lang.Class({
         // by looping through signals with identical disconnect methods
         this._screenSignals = [];
         this._displaySignals = [];
-        this._settingsSignals = []
+        this._settingsSignals = [];
+        this._workspaceSignals = [];
         
         this._windowTracker = Shell.WindowTracker.get_default();
         let display = global.screen.get_display();
@@ -228,17 +229,28 @@ const WorkspaceButton = Lang.Class({
         });
         
         // If a window is closed, we want to change the style if it's empty and an empty style
-        // has been configured
-        // The workspace label is also updated to change to the empty workspace indicator
-        this._screenSignals.push(global.screen.connect("window-left-monitor", () => {
+        // has been configured. The workspace label is also updated to change to the empty
+        // workspace indicator.
+        this._screenSignals.push(global.screen.connect("window-left-monitor", (metaScreen, screenNum, metaWindow) => {
             this._updateMenu();
             this._updateStyle();
             this._updateLabel();
         }));
-        // We'll need to update the workspace style when the workspace is changed
-        // We also update the label to switch to/from the active workspace indicator
+        // We'll need to update the workspace style when the workspace is changed and
+        // also update the label to switch to/from the active workspace indicator
         this._screenSignals.push(global.screen.connect_after("workspace-switched", (screenObj, wsFrom, wsTo, wsDirection, wsPointer) => {
             if (this._wsIndex === wsFrom || this._wsIndex === wsTo) {
+                this._updateMenu();
+                this._updateStyle();
+                this._updateLabel();
+            }
+        }));
+        
+        // This signal handler essentially replaces the "display" based 'window-created' signal
+        // handler and helps trigger updates when windows are moved to workspaces without the
+        // workspace itself being switched in the same action.
+        this._workspaceSignals.push(this.metaWorkspace.connect_after("window-added", (metaWorkspace, metaWindow) => {
+            if (this._wsIndex === metaWorkspace.index()) {
                 this._updateMenu();
                 this._updateStyle();
                 this._updateLabel();
@@ -258,15 +270,12 @@ const WorkspaceButton = Lang.Class({
                 this._updateStyle();
             }
         }));
-        this._displaySignals.push(display.connect_after("window-created", (metaDisplay, metaWindow) => {
-            if (this._wsIndex === metaWindow.get_workspace().index()) {
-                this._updateStyle();
-            }
-        }));
         
         // Connect to the menu open-state-changed signal and update the menu
         this._menuStateSignal = this.menu.connect("open-state-changed", () => {
             this._updateMenu();
+            this._updateStyle();
+            this._updateLabel();
         });
         
         // Connect to the signals for enter-event/leave-event for this button and change the
@@ -304,6 +313,12 @@ const WorkspaceButton = Lang.Class({
         this._screenSignals = [];
         this._screenSignals = null;
         
+        for (let x = 0; x < this._workspaceSignals.length; x++) {
+            this.metaWorkspace.disconnect(this._workspaceSignals[x]);
+        }
+        this._workspaceSignals = [];
+        this._workspaceSignals = null;
+        
         // Disconnect display signals
         for (let x = 0; x < this._displaySignals.length; x++) {
             display.disconnect(this._displaySignals[x]);
@@ -318,17 +333,16 @@ const WorkspaceButton = Lang.Class({
     },
     
     _updateMenu() {
-        // Add delay for metaWorkspace.list_windows();
+        // Add delay for this.metaWorkspace.list_windows();
         Mainloop.timeout_add(1, () => {
             this.menu.removeAll();
             let emptyMenu = true;
             
             let workspaceName = Meta.prefs_get_workspace_name(this._wsIndex);
-            let metaWorkspace = global.screen.get_workspace_by_index(this._wsIndex);
             // Stop executing inside the timeout if the workspace is undefined since
             // it means the workspace is probably gone.
-            if (metaWorkspace === null) { return false; }
-            let windowList = metaWorkspace.list_windows();
+            if (this.metaWorkspace === null) { return false; }
+            let windowList = this.metaWorkspace.list_windows();
             let stickyWindows = windowList.filter(function(w) {
                 return !w.is_skip_taskbar() && w.is_on_all_workspaces();
             });
@@ -356,7 +370,7 @@ const WorkspaceButton = Lang.Class({
                 for ( let i = 0; i < regularWindows.length; ++i ) {
                     let metaWindow = regularWindows[i];
                     let windowItem = new PopupMenu.PopupBaseMenuItem();
-                    windowItem.connect("activate", () => { this._activateWindow(metaWorkspace, metaWindow) });
+                    windowItem.connect("activate", () => { this._activateWindow(this.metaWorkspace, metaWindow) });
                     windowItem._window = regularWindows[i];
                     
                     let windowApp = this._windowTracker.get_window_app(windowItem._window);
@@ -391,14 +405,13 @@ const WorkspaceButton = Lang.Class({
     _updateStyle() {
         this.currentWorkSpace = global.screen.get_active_workspace().index()
         
-        // Add delay for metaWorkspace.list_windows();
+        // Add delay for this.metaWorkspace.list_windows();
         Mainloop.timeout_add(1, () => {
             let workspaceName = Meta.prefs_get_workspace_name(this._wsIndex);
-            let metaWorkspace = global.screen.get_workspace_by_index(this._wsIndex);
             // Stop executing inside the timeout if the workspace is undefined since
             // it means the workspace is probably gone.
-            if (metaWorkspace == undefined) { return false; }
-            let windowList = metaWorkspace.list_windows();
+            if (this.metaWorkspace == undefined) { return false; }
+            let windowList = this.metaWorkspace.list_windows();
             let stickyWindows = windowList.filter(function (w) {
                 return !w.is_skip_taskbar() && w.is_on_all_workspaces();
             });
@@ -468,11 +481,10 @@ const WorkspaceButton = Lang.Class({
         
         Mainloop.timeout_add(1, () => {
             let workspaceName = Meta.prefs_get_workspace_name(this._wsIndex);
-            let metaWorkspace = global.screen.get_workspace_by_index(this._wsIndex);
             // Stop executing inside the timeout if the workspace is undefined since
             // it means the workspace is probably gone.
-            if (metaWorkspace === null) { return false; }
-            let windowList = metaWorkspace.list_windows();
+            if (this.metaWorkspace === null) { return false; }
+            let windowList = this.metaWorkspace.list_windows();
             let stickyWindows = windowList.filter(function (w) {
                 return !w.is_skip_taskbar() && w.is_on_all_workspaces();
             });
@@ -698,7 +710,10 @@ function enable() {
         updateButtonStyles();
     }));
     
-    buildWorkspaceButtons();
+    Mainloop.timeout_add(500, () => {
+        buildWorkspaceButtons();
+        return false;
+    });
 }
 
 function disable() {

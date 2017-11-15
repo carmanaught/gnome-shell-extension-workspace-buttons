@@ -57,7 +57,7 @@ const WORKSPACE_SCHEMA = "org.gnome.desktop.wm.preferences";
 const WORKSPACE_KEY = "workspace-names";
 
 function debug(val) {
-    val = `"[ Workspace Buttons ]--------> ${val}`;
+    val = `[ Workspace Buttons ]--------> ${val}`;
     global.log(val);
 }
 
