@@ -228,14 +228,6 @@ const WorkspaceButton = Lang.Class({
             this._updateLabel();
         });
         
-        // If a window is closed, we want to change the style if it's empty and an empty style
-        // has been configured. The workspace label is also updated to change to the empty
-        // workspace indicator.
-        this._screenSignals.push(global.screen.connect("window-left-monitor", (metaScreen, screenNum, metaWindow) => {
-            this._updateMenu();
-            this._updateStyle();
-            this._updateLabel();
-        }));
         // We'll need to update the workspace style when the workspace is changed and
         // also update the label to switch to/from the active workspace indicator
         this._screenSignals.push(global.screen.connect_after("workspace-switched", (screenObj, wsFrom, wsTo, wsDirection, wsPointer) => {
@@ -248,9 +240,20 @@ const WorkspaceButton = Lang.Class({
         
         // This signal handler essentially replaces the "display" based 'window-created' signal
         // handler and helps trigger updates when windows are moved to workspaces without the
-        // workspace itself being switched in the same action.
+        // workspace itself being switched in the same action. This ignores windows considered
+        // to be "on all workspaces".
         this._workspaceSignals.push(this.metaWorkspace.connect_after("window-added", (metaWorkspace, metaWindow) => {
-            if (this._wsIndex === metaWorkspace.index()) {
+            if (this._wsIndex === metaWorkspace.index() && metaWindow.is_on_all_workspaces() !== true) {
+                this._updateMenu();
+                this._updateStyle();
+                this._updateLabel();
+            }
+        }));
+        // This signal handler essentially replaces the "screen" based 'window-left-monitor'
+        // signal and helps trigger updates when windows are removed from a workspace, ignoring
+        // windows that are considered "on all workspaces".
+        this._workspaceSignals.push(this.metaWorkspace.connect_after("window-removed", (metaWorkspace, metaWindow) => {
+            if (this._wsIndex === metaWorkspace.index() && metaWindow.is_on_all_workspaces() !== true) {
                 this._updateMenu();
                 this._updateStyle();
                 this._updateLabel();
