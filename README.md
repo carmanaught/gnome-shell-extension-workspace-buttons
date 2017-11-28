@@ -43,9 +43,9 @@ This is the Workspace Names settings page which is copied from the the Workspace
 
 The following features of the [WorkspaceBar](https://github.com/carmanaught/workspacebar) extension have not been included and there is no intention to reimplement them.
 
-The **show overview** functionality is no longer provided as this used a enclosing button and was also not something I used when there are various other methods available (the activites button itself or the hot-corner). It also seems to defeat the point of having buttons that you might want to use if mousing over them activates the overview.
+The **show overview** functionality is no longer provided as this used an enclosing button to trigger an enter/exit event and was also not something I used when there are various other methods available (the activites button itself or the hot-corner). It also seems to defeat the point of having buttons that you might want to use if mousing over them activates the overview.
 
-The **mouse button to open preferences** has not been implemented, as this defaulted to the right-click which now opens a menu, where there is a menu option to access the preferences.
+The **mouse button to open preferences** has not been implemented, as this defaulted to a mouse right-click which can now open a menu. There is now a menu item to access the settings/preferences.
 
 The **option for hiding empty workspaces** is no longer available, as it doesn't work properly with the ability to traverse left/right between workspaces and gets skipped over. While it could be made visual when scrolling workspaces (as is done in the WorkspaceBar extension), it loses a degree of accessibility.
 
