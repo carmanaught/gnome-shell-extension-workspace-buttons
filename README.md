@@ -15,7 +15,7 @@ This is how the Workspace Buttons look like in action with the current choice of
 - The empty workspaces with no window/application in them default to a dark grey text
 - Hovering over a workspace defaults to bright white text
 
-This is how the Workspace Buttons look using the Activity Indicator option and with some indicators in use. The indicators are  (U+F10C),  (U+F192),  (U+F111) for those interested. If you can't see the characters, you'll likely need [Font Awesome](http://fontawesome.io/icons/) for them to be visible (check your distribution repositories).
+This is how the Workspace Buttons look using the Activity Indicator option and with some indicators in use. The indicators are  (U+F10C),  (U+F192),  (U+F111) for those interested. If you can't see the characters, you'll likely need [Font Awesome](http://fontawesome.io/icons/) (version 4, not 5) for them to be visible (check your distribution repositories). 
 
 ![Workspace Buttons in action with activity indicators](http://i.imgur.com/VJZdxd9.png)
 
