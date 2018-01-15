@@ -27,7 +27,7 @@ These are the General Settings on the Settings page.
 
 ![Workspace Buttons - General Settings](https://i.imgur.com/AGpEZWu.png)
 
-Thse is the Workspace Label Format settings page which is used to change the settings to change how the workspace labels appear. The format settings are somewhat more extensive and allow a greater degree of customization.
+This is the Workspace Label Format settings page which is used to change the settings for how the workspace labels appear. The format settings are somewhat more extensive and allow a greater degree of customization.
 
 ![Workspace Buttons - Workspace Label Format](http://i.imgur.com/I8SZnR9.png)
 
