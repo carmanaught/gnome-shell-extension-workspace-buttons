@@ -284,9 +284,16 @@ const WorkspaceButton = Lang.Class({
         // Connect to the signals for enter-event/leave-event for this button and change the
         // style as needed.
         this._hoverOverSignal = this.actor.connect("enter-event", () => {
-            // Change hover (except for urgent)
+            // Change hover (except for urgent or if the menu is already open)
             if (!this.workspaceLabel._urgent) {
-                this.workspaceLabel.set_style(styleHover);
+                // Add a timeout here so that the menu open check isn't done before the menu
+                // has actually had a chance to open.
+                Mainloop.timeout_add(1, () => {
+                    if (!this.menu.isOpen) {
+                        this.workspaceLabel.set_style(styleHover);
+                    }
+                    return false;
+                });
             }
         })
         this._hoverOutSignal = this.actor.connect("leave-event", () => {

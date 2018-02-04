@@ -585,7 +585,7 @@ const WorkspaceButtonsWorkspaceColors = new GObject.Class({
         });
         // Easiest way to understand attach format:-
         //   Object, Column, Row, ColSpan, RowSpan
-        this.attach(lblPosTitle, 0, 0, 3, 1);
+        this.attach(lblPosTitle, 0, 0, 1, 1);
         
         // Urgent color label
         let lblUrgent = new Gtk.Label({
@@ -672,7 +672,6 @@ const WorkspaceButtonsWorkspaceColors = new GObject.Class({
         this.attach(lblEmpty, 0, 5, 2, 1);
         
         // Empty color chooser
-        
         this.btnEmptyColor = new Gtk.ColorButton({
             halign: Gtk.Align.END
         });
@@ -681,6 +680,26 @@ const WorkspaceButtonsWorkspaceColors = new GObject.Class({
             this._settings.set_string(KEYS.emptyColor, getHexByColor(button.get_color()));
         });
         this.attach(this.btnEmptyColor, 2, 5, 1, 1);
+        
+        // Reset to default button
+        this.btnDefaults = new Gtk.Button({
+            label: _("Reset Colors to Default"),
+            halign: Gtk.Align.END,
+            valign: Gtk.Align.END
+        });
+        this.btnDefaults.connect("clicked", () => {
+            this._settings.reset(KEYS.urgentColor);
+            this.btnUrgentColor.set_color(getColorByHex(this._settings.get_string(KEYS.urgentColor)));
+            this._settings.reset(KEYS.hoverColor);
+            this.btnHoverColor.set_color(getColorByHex(this._settings.get_string(KEYS.hoverColor)));
+            this._settings.reset(KEYS.activeColor);
+            this.btnActiveColor.set_color(getColorByHex(this._settings.get_string(KEYS.activeColor)));
+            this._settings.reset(KEYS.inactiveColor);
+            this.btnInactiveColor.set_color(getColorByHex(this._settings.get_string(KEYS.inactiveColor)));
+            this._settings.reset(KEYS.emptyColor);
+            this.btnEmptyColor.set_color(getColorByHex(this._settings.get_string(KEYS.emptyColor)));
+        })
+        this.attach(this.btnDefaults, 1, 0, 2, 1);
     },
 });
 
@@ -702,7 +721,7 @@ const WorkspaceNameModel = new GObject.Class({
 
         this._reloadFromSettings();
 
-        // overriding class closure doesn't work, because GtkTreeModel
+        // Overriding class closure doesn't work, because GtkTreeModel
         // plays tricks with marshallers and class closures
         this.connect("row-changed", () => { this._onRowChanged(); });
         this.connect("row-inserted", () => { this._onRowInserted(); });
