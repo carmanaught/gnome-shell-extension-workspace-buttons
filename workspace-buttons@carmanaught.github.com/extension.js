@@ -113,8 +113,6 @@ const WorkspaceButton = Lang.Class({
         // Add a delay so that the this.metaWorkspace.list_windows() of the _updateMenu function
         // will work properly, otherwise we'll have an empty window list.
         this._updateMenu();
-        
-        //this._mouseOver = false;
     },
     
     // I'm not sure about touch handling here. Ideally a regular touch should toggle the
@@ -143,9 +141,6 @@ const WorkspaceButton = Lang.Class({
                 this.menu.toggle();
             }
         }
-        
-        //this.clickActivate
-        //this.buttonActivate
         
         return Clutter.EVENT_PROPAGATE;
     },
@@ -343,110 +338,102 @@ const WorkspaceButton = Lang.Class({
     },
     
     _updateMenu() {
-        // Add delay for this.metaWorkspace.list_windows();
-        Mainloop.timeout_add(1, () => {
-            this.menu.removeAll();
-            let emptyMenu = true;
-            
-            let workspaceName = Meta.prefs_get_workspace_name(this._wsIndex);
-            // Stop executing inside the timeout if the workspace is undefined since
-            // it means the workspace is probably gone.
-            if (this.metaWorkspace === null) { return false; }
-            let windowList = this.metaWorkspace.list_windows();
-            let stickyWindows = windowList.filter(function(w) {
-                return !w.is_skip_taskbar() && w.is_on_all_workspaces();
-            });
-            let regularWindows = windowList.filter(function(w) {
-                return !w.is_skip_taskbar() && !w.is_on_all_workspaces();
-            });
-            
-            let workspaceActivate = new PopupMenu.PopupMenuItem(`${_("Activate Workspace")} ${(this._wsIndex + 1)}`);
-            workspaceActivate.connect("activate", () => { this._setWorkspace(this._wsIndex); });
-            this.menu.addMenuItem(workspaceActivate);
-            let prefsActivate = new PopupMenu.PopupMenuItem(_("Settings"));
-            prefsActivate.connect("activate", () => { Main.Util.trySpawnCommandLine(PrefsDialog); });
-            this.menu.addMenuItem(prefsActivate);
-            this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
-            
-            if (regularWindows.length > 0) {
-                let workspaceLabel = new PopupMenu.PopupMenuItem(`${(this._wsIndex + 1)}: ${workspaceName}`);
-                workspaceLabel.actor.reactive = false;
-                workspaceLabel.actor.can_focus = false;
-                if (this._wsIndex == global.screen.get_active_workspace().index()) {
-                    workspaceLabel.setOrnament(PopupMenu.Ornament.DOT);
-                }
-                this.menu.addMenuItem(workspaceLabel);
-                
-                for ( let i = 0; i < regularWindows.length; ++i ) {
-                    let metaWindow = regularWindows[i];
-                    let windowItem = new PopupMenu.PopupBaseMenuItem();
-                    windowItem.connect("activate", () => { this._activateWindow(this.metaWorkspace, metaWindow) });
-                    windowItem._window = regularWindows[i];
-                    
-                    let windowApp = this._windowTracker.get_window_app(windowItem._window);
-                    let windowBox = new St.BoxLayout( { x_expand: true  } );
-                    windowItem._icon = windowApp.create_icon_texture(16);
-                    if (metaWindow.urgent || metaWindow.demands_attention) {
-                        windowBox.add(new St.Label({ text: this._ellipsizeWindowTitle(metaWindow),
-                            x_expand: true, style: styleUrgent }));
-                    } else {
-                        windowBox.add(new St.Label({ text: this._ellipsizeWindowTitle(metaWindow),
-                            x_expand: true }));
-                    }
-                    windowBox.add(new St.Label({ text: "   " }));
-                    windowBox.add(windowItem._icon);
-                    windowItem.actor.add_actor(windowBox);
-                    this.menu.addMenuItem(windowItem);
-                    emptyMenu = false;
-                }
-            }
-            
-            if (emptyMenu) {
-                let emptyItem = new PopupMenu.PopupMenuItem(_("No open windows"))
-                emptyItem.actor.reactive = false;
-                emptyItem.actor.can_focus = false;
-                this.menu.addMenuItem(emptyItem);
-            }
-            
-            return false;
+        this.menu.removeAll();
+        let emptyMenu = true;
+        
+        let workspaceName = Meta.prefs_get_workspace_name(this._wsIndex);
+        // Stop executing if the workspace is undefined, since it means the 
+        // workspace is probably gone.
+        if (this.metaWorkspace === null) { return false; }
+        let windowList = this.metaWorkspace.list_windows();
+        let stickyWindows = windowList.filter(function(w) {
+            return !w.is_skip_taskbar() && w.is_on_all_workspaces();
         });
+        let regularWindows = windowList.filter(function(w) {
+            return !w.is_skip_taskbar() && !w.is_on_all_workspaces();
+        });
+        
+        let workspaceActivate = new PopupMenu.PopupMenuItem(`${_("Activate Workspace")} ${(this._wsIndex + 1)}`);
+        workspaceActivate.connect("activate", () => { this._setWorkspace(this._wsIndex); });
+        this.menu.addMenuItem(workspaceActivate);
+        let prefsActivate = new PopupMenu.PopupMenuItem(_("Settings"));
+        prefsActivate.connect("activate", () => { Main.Util.trySpawnCommandLine(PrefsDialog); });
+        this.menu.addMenuItem(prefsActivate);
+        this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
+        
+        if (regularWindows.length > 0) {
+            let workspaceLabel = new PopupMenu.PopupMenuItem(`${(this._wsIndex + 1)}: ${workspaceName}`);
+            workspaceLabel.actor.reactive = false;
+            workspaceLabel.actor.can_focus = false;
+            if (this._wsIndex == global.screen.get_active_workspace().index()) {
+                workspaceLabel.setOrnament(PopupMenu.Ornament.DOT);
+            }
+            this.menu.addMenuItem(workspaceLabel);
+            
+            for ( let i = 0; i < regularWindows.length; ++i ) {
+                let metaWindow = regularWindows[i];
+                let windowItem = new PopupMenu.PopupBaseMenuItem();
+                windowItem.connect("activate", () => { this._activateWindow(this.metaWorkspace, metaWindow) });
+                windowItem._window = regularWindows[i];
+                
+                let windowApp = this._windowTracker.get_window_app(windowItem._window);
+                let windowBox = new St.BoxLayout( { x_expand: true  } );
+                // Stop executing if windowApp is null, since it means the window is probably gone.
+                if (windowApp === null) { return false; }
+                windowItem._icon = windowApp.create_icon_texture(16);
+                if (metaWindow.urgent || metaWindow.demands_attention) {
+                    windowBox.add(new St.Label({ text: this._ellipsizeWindowTitle(metaWindow),
+                        x_expand: true, style: styleUrgent }));
+                } else {
+                    windowBox.add(new St.Label({ text: this._ellipsizeWindowTitle(metaWindow),
+                        x_expand: true }));
+                }
+                windowBox.add(new St.Label({ text: "   " }));
+                windowBox.add(windowItem._icon);
+                windowItem.actor.add_actor(windowBox);
+                this.menu.addMenuItem(windowItem);
+                emptyMenu = false;
+            }
+        }
+        
+        if (emptyMenu) {
+            let emptyItem = new PopupMenu.PopupMenuItem(_("No open windows"))
+            emptyItem.actor.reactive = false;
+            emptyItem.actor.can_focus = false;
+            this.menu.addMenuItem(emptyItem);
+        }
     },
     
     _updateStyle() {
         this.currentWorkSpace = global.screen.get_active_workspace().index()
         
-        // Add delay for this.metaWorkspace.list_windows();
-        Mainloop.timeout_add(1, () => {
-            let workspaceName = Meta.prefs_get_workspace_name(this._wsIndex);
-            // Stop executing inside the timeout if the workspace is undefined since
-            // it means the workspace is probably gone.
-            if (this.metaWorkspace == undefined) { return false; }
-            let windowList = this.metaWorkspace.list_windows();
-            let stickyWindows = windowList.filter(function (w) {
-                return !w.is_skip_taskbar() && w.is_on_all_workspaces();
-            });
-            let regularWindows = windowList.filter(function(w) {
-                return !w.is_skip_taskbar() && !w.is_on_all_workspaces();
-            });
-            let urgentWindows = windowList.filter(function(w) {
-                return w.urgent || w.demands_attention;
-            });
-            
-            this.workspaceLabel._urgent = false;
-            if (this._wsIndex !== this.currentWorkSpace && urgentWindows.length > 0 && this.urgentWorkspaceStyle === true) {
-                this.workspaceLabel._urgent = true;
-                this.workspaceLabel.style = styleUrgent;
-            } else if (this._wsIndex === this.currentWorkSpace) {
-                this.workspaceLabel.style = styleActive;
-            } else if (regularWindows.length > 0) {
-                this.workspaceLabel.style = styleInactive;
-            } else {
-                let emptyStyle = (this.emptyWorkspaceStyle === true) ? styleEmpty : styleInactive;
-                this.workspaceLabel.style = emptyStyle;
-            }
-            
-            return false;
+        let workspaceName = Meta.prefs_get_workspace_name(this._wsIndex);
+        // Stop executing if the workspace is undefined, since it means the 
+        // workspace is probably gone.
+        if (this.metaWorkspace == undefined) { return false; }
+        let windowList = this.metaWorkspace.list_windows();
+        let stickyWindows = windowList.filter(function (w) {
+            return !w.is_skip_taskbar() && w.is_on_all_workspaces();
         });
+        let regularWindows = windowList.filter(function(w) {
+            return !w.is_skip_taskbar() && !w.is_on_all_workspaces();
+        });
+        let urgentWindows = windowList.filter(function(w) {
+            return w.urgent || w.demands_attention;
+        });
+        
+        this.workspaceLabel._urgent = false;
+        if (this._wsIndex !== this.currentWorkSpace && urgentWindows.length > 0 && this.urgentWorkspaceStyle === true) {
+            this.workspaceLabel._urgent = true;
+            this.workspaceLabel.style = styleUrgent;
+        } else if (this._wsIndex === this.currentWorkSpace) {
+            this.workspaceLabel.style = styleActive;
+        } else if (regularWindows.length > 0) {
+            this.workspaceLabel.style = styleInactive;
+        } else {
+            let emptyStyle = (this.emptyWorkspaceStyle === true) ? styleEmpty : styleInactive;
+            this.workspaceLabel.style = emptyStyle;
+        }
     },
     
     _updateLabel() {
@@ -489,39 +476,32 @@ const WorkspaceButton = Lang.Class({
             }
         }
         
-        Mainloop.timeout_add(1, () => {
-            let workspaceName = Meta.prefs_get_workspace_name(this._wsIndex);
-            // Stop executing inside the timeout if the workspace is undefined since
-            // it means the workspace is probably gone.
-            if (this.metaWorkspace === null) { return false; }
-            let windowList = this.metaWorkspace.list_windows();
-            let stickyWindows = windowList.filter(function (w) {
-                return !w.is_skip_taskbar() && w.is_on_all_workspaces();
-            });
-            let regularWindows = windowList.filter(function(w) {
-                return !w.is_skip_taskbar() && !w.is_on_all_workspaces();
-            });
-            let urgentWindows = windowList.filter(function(w) {
-                return w.urgent || w.demands_attention;
-            });
-            
-            // Do checks to determine the format of the label
-            if (this._wsIndex === this.currentWorkSpace) {
-                str = (actIndicator === true) ? str + this.activityIndicators[2] : str;
-            } else if (urgentWindows.length > 0 || regularWindows.length > 0) {
-                str = (actIndicator === true) ? str + this.activityIndicators[1] : str;
-            } else if (regularWindows.length === 0 && this.emptyWorkspaceStyle === true) {
-                str = (actIndicator === true) ? str + this.activityIndicators[0] : str;
-            } else if (regularWindows.length > 0 || this._wsIndex !== this.currentWorkSpace) {
-                str = (actIndicator === true) ? str + this.activityIndicators[1] : str;
-            }
-            
-            this.workspaceLabel.text = str;
-            
-            return false;
+        // Stop executing if the workspace is undefined, since it means the 
+        // workspace is probably gone.
+        if (this.metaWorkspace === null) { return false; }
+        let windowList = this.metaWorkspace.list_windows();
+        let stickyWindows = windowList.filter(function (w) {
+            return !w.is_skip_taskbar() && w.is_on_all_workspaces();
+        });
+        let regularWindows = windowList.filter(function(w) {
+            return !w.is_skip_taskbar() && !w.is_on_all_workspaces();
+        });
+        let urgentWindows = windowList.filter(function(w) {
+            return w.urgent || w.demands_attention;
         });
         
+        // Do checks to determine the format of the label
+        if (this._wsIndex === this.currentWorkSpace) {
+            str = (actIndicator === true) ? str + this.activityIndicators[2] : str;
+        } else if (urgentWindows.length > 0 || regularWindows.length > 0) {
+            str = (actIndicator === true) ? str + this.activityIndicators[1] : str;
+        } else if (regularWindows.length === 0 && this.emptyWorkspaceStyle === true) {
+            str = (actIndicator === true) ? str + this.activityIndicators[0] : str;
+        } else if (regularWindows.length > 0 || this._wsIndex !== this.currentWorkSpace) {
+            str = (actIndicator === true) ? str + this.activityIndicators[1] : str;
+        }
         
+        this.workspaceLabel.text = str;
     },
     
     _setWorkspace(index) {
@@ -582,7 +562,12 @@ const WorkspaceButton = Lang.Class({
     },
     
     _ellipsizeWindowTitle(window) {
-        return this._ellipsizeString(window.get_title(), 45);
+        // If the get_title() returns a null value it causes an error in the
+        // _ellipsizeString function, which this prevents by providing a string
+        // for the function to use. This seems necessary to avoid spamming the
+        // log during login of a Wayland session.
+        if (window.get_title() === null) { return "Unnamed window"}
+        else { return this._ellipsizeString(window.get_title(), 45); }
     },
 });
 
