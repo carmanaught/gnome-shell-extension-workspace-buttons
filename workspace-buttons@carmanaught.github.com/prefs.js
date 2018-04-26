@@ -347,12 +347,12 @@ const WorkspaceButtonsWorkspaceFormat = new GObject.Class({
             this._settings.set_boolean(KEYS.numLabel, swWkspNumber.active);
             
             // Disable workspace label separator if both workspace numbers and names are not
-            //  enabled
+            // enabled
             lblSeparator.set_sensitive(swWkspNumber.active === true && swWkspName.active === true ? true : false);
             this.txtSeparator.set_sensitive(swWkspNumber.active === true && swWkspName.active === true ? true : false);
             
             // Disable the ability to disable workspace names unless the activity indicators are
-            //  enabled as we have to have some sort of indicator
+            // enabled as we have to have some sort of indicator
             if (swActInd.active === true) {
                 lblWkspName.set_sensitive(false);
                 swWkspName.set_sensitive(false);
@@ -383,12 +383,12 @@ const WorkspaceButtonsWorkspaceFormat = new GObject.Class({
             this._setWkspName(swWkspName);
             
             // Disable workspace label separator if both workspace numbers and names are not
-            //  enabled
+            // enabled
             lblSeparator.set_sensitive(swWkspNumber.active === true && swWkspName.active === true ? true : false);
             this.txtSeparator.set_sensitive(swWkspNumber.active === true && swWkspName.active === true ? true : false);
             
             // Disable the ability to disable workspace numbers unless the activity indicators are
-            //  enabled as we have to have some sort of indicator
+            // enabled as we have to have some sort of indicator
             lblWkspNumber.set_sensitive(swWkspName.active === true || swActInd.active === true ? true : false);
             swWkspNumber.set_sensitive(swWkspName.active === true || swActInd.active === true ? true : false);
         });
