@@ -1,3 +1,5 @@
+DEPRECATED: This repository has been deprecated and moved to https://gitlab.com/carmanaught/gnome-shell-extension-workspace-buttons/
+
 # Workspace Buttons
 
 **Note:** I am no longer actively using GNOME and therefore will not be fixing bugs.
