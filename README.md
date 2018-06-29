@@ -2,8 +2,6 @@ DEPRECATED: This repository has been deprecated and moved to https://gitlab.com/
 
 # Workspace Buttons
 
-**Note:** I am no longer actively using GNOME and therefore will not be fixing bugs.
-
 This is a GNOME shell extension for switching workspaces on the panel, based off of my fork of [WorkspaceBar](https://github.com/carmanaught/workspacebar), which itself was forked from [mbokil/workspacebar](https://github.com/mbokil/workspacebar). The extension requires at least GNOME 3.24, as it uses shorthand function/method declarations and template literals (backticks).
 
 The primary difference with this extension is that it uses PanelMenu.Button objects for each workspace button. Each of these buttons has a menu which contains a list of the windows on the workspace, allowing you to activate the application (credit to [lyonell/all-windows](https://github.com/lyonel/all-windows) for some of the code and ideas). The buttons also allow switching to a given workspace if the option to do so has been toggled on (with a choice between Primary and Secondary button, depending on preference).
